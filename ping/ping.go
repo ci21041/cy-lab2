@@ -16,7 +16,6 @@ func foo(channel chan string) {
 
 		received := <-channel
 		fmt.Println("Foo is received: ", received)
-		time.Sleep(time.Second)
 	}
 }
 
@@ -28,6 +27,7 @@ func bar(channel chan string) {
 
 		fmt.Println("Bar is sending: ", "pong")
 		channel <- "pong"
+		time.Sleep(time.Millisecond)
 	}
 }
 
@@ -35,8 +35,8 @@ func pingPong() {
 	// TODO: make channel of type string and pass it to foo and bar
 	message := make(chan string)
 	go foo(message) // Nil is similar to null. Sending or receiving from a nil chan blocks forever.
-	bar(message)
-
+	go bar(message)
+	time.Sleep(2 * time.Second)
 }
 
 func main() {

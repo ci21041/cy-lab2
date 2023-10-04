@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 // question struct stores a single question and its corresponding answer.
@@ -38,7 +39,9 @@ func questions() []question {
 }
 
 // ask asks a question and returns an updated score depending on the answer.
-func ask(s score, question question) score {
+func ask(s score, question question, c chan score) {
+	//for {
+	//q := <-question
 	fmt.Println(question.q)
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("Enter answer: ")
@@ -47,17 +50,70 @@ func ask(s score, question question) score {
 	if strings.Compare(text, question.a) == 0 {
 		fmt.Println("Correct!")
 		s++
+		c <- s
 	} else {
 		fmt.Println("Incorrect :-(")
+		c <- s
 	}
-	return s
+	//c <- s
+	//}
 }
+
+// This also works
+//func ask(s score, question chan question, c chan score) {
+//	for {
+//		q := <-question
+//		fmt.Println(q.q)
+//		scanner := bufio.NewScanner(os.Stdin)
+//		fmt.Print("Enter answer: ")
+//		scanner.Scan()
+//		text := scanner.Text()
+//		if strings.Compare(text, q.a) == 0 {
+//			fmt.Println("Correct!")
+//			s++
+//			c <- s
+//		} else {
+//			fmt.Println("Incorrect :-(")
+//			c <- s
+//		}
+//	}
+//}
+
+// The new main function
+//func main() {
+//	s := score(0)
+//	qs := questions()
+//	qc := make(chan question)
+//	c1 := make(chan score)
+//	go ask(s, qc, c1)
+//	for _, q := range qs {
+//		qc <- q
+//		select {
+//		case <-time.After(5 * time.Second):
+//			fmt.Println("")
+//			fmt.Println("Final score", s)
+//			return
+//		case s1 := <-c1:
+//			s = s1
+//		}
+//	}
+//	fmt.Println("Final score", s)
+//}
 
 func main() {
 	s := score(0)
 	qs := questions()
+	c1 := make(chan score)
 	for _, q := range qs {
-		s = ask(s, q)
+		go ask(s, q, c1)
+		select {
+		case <-time.After(5 * time.Second):
+			fmt.Println("")
+			fmt.Println("Final score", s)
+			return
+		case s1 := <-c1:
+			s = s1
+		}
 	}
 	fmt.Println("Final score", s)
 }
